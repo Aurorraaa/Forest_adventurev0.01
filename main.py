@@ -1,11 +1,85 @@
 import pygame
 import pytmx
 
+pygame.init()
+
+
+class Object(pygame.sprite.Sprite):
+    def __init__(self, x, y, file):
+        pygame.sprite.Sprite.__init__(self)
+
+        self.image = pygame.image.load(file).convert_alpha()
+        self.rect = self.image.get_rect(center=(x, y))
+
+        self.dx = 0
+        self.dy = 0
+
+        self.go = False
+        self.Frame = 0
+
+        self.pers_right = ["0 (2).png", "1 (2).png", "2 (2).png", "3 (2).png", "4 (2).png", "5 (2).png", "0.png",
+                           "1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png",
+                           "10.png", "11.png", "12.png", "13.png", "14.png", "15.png", "16.png", "17.png"]
+
+        self.pers_left = ["image_0-23.png", "image_0-22.png", "image_0-21.png", "image_0-20.png", "image_0-19.png",
+                          "image_0-18.png", "image_0-17.png", "image_0-16.png", "image_0-15.png", "image_0-14.png",
+                          "image_0-13.png", "image_0-12.png", "image_0-11.png", "image_0-10.png", "image_0-9.png",
+                          "image_0-8.png", "image_0-7.png", "image_0-6.png", "image_0-5.png", "image_0-4.png",
+                          "image_0-3.png", "image_0-2.png", "image_0-1.png", "image_0-0.png"]
+
+        self.idle_frames = ["image_0-0.png", "image_0-1.png", "image_0-2.png", "image_0-3.png", "image_0-4.png",
+                            "image_0-5.png", "image_0-6.png", "image_0-7.png", "image_0-8.png", "image_0-9.png",
+                            "image_0-10.png", "image_0-11.png", "image_0-12.png", "image_0-13.png", "image_0-14.png",
+                            "image_0-15.png", "image_0-16.png", "image_0-17.png"]
+
+    def update(self, *args):
+        self.rect.x += self.dx
+        self.rect.y += self.dy
+
+        if self.go:
+            self.Frame += 0.4
+            if self.dx != 0:
+                if self.Frame >= len(self.pers_right):
+                    self.Frame = 0
+
+            if self.dx > 0:  # Движение вправо
+                self.animate_right()
+            elif self.dx < 0:  # Движение влево
+                self.animate_left()
+        else:
+            self.animate_idle()
+
+    def animate_right(self):
+        """Анимация движения вправо"""
+        self.image = pygame.image.load(
+            "Data/gg_sprites/right/" + self.pers_right[int(self.Frame) % len(self.pers_right)]).convert_alpha()
+
+    def animate_left(self):
+        """Анимация движения влево"""
+        self.image = pygame.image.load(
+            "Data/gg_sprites/left/" + self.pers_left[int(self.Frame) % len(self.pers_left)]).convert_alpha()
+
+    def animate_idle(self):
+        """Анимация ожидания"""
+        self.Frame += 0.125
+        if self.Frame >= len(self.idle_frames):
+            self.Frame = 0
+        self.image = pygame.image.load(
+            "Data/gg_sprites/idle/" + self.idle_frames[int(self.Frame)]).convert_alpha()
+
+    def start_animation(self):
+        self.go = True
+
+    def stop_animation(self):
+        self.go = False
+
+
 SIZE = WIDTH, HEIGHT = 800, 600
+FPS = 60
+clock = pygame.time.Clock()
 
 
 def main():
-    pygame.init()
     screen = pygame.display.set_mode(SIZE)
     pygame.display.set_caption("Forest Adventure")
 
@@ -18,99 +92,49 @@ def main():
 
     tile_width = tmx_data.tilewidth
     tile_height = tmx_data.tileheight
-
-    # Загружаем спрайт-лист для idle анимации
-    try:
-        idle_sheet = pygame.image.load("Data/gg_sprites/idle sheet-Sheet.png").convert_alpha()
-        run_sheet = pygame.image.load("Data/gg_sprites/itch run-Sheet sheet.png").convert_alpha()
-    except Exception as e:
-        print(f"Ошибка загрузки спрайтов: {e}")
-        return
-
-    # Разделяем спрайт-лист на кадры для idle анимации
-    idle_frame_width = idle_sheet.get_width() // 8
-    idle_frame_height = idle_sheet.get_height()
-    idle_frames = [
-        idle_sheet.subsurface(pygame.Rect(i * idle_frame_width, 0, idle_frame_width, idle_frame_height))
-        for i in range(8)
-    ]
-
-    # Разделяем спрайт-лист на кадры для анимации бега
-    run_frame_width = run_sheet.get_width() // 8
-    run_frame_height = run_sheet.get_height()
-    run_frames = [
-        run_sheet.subsurface(pygame.Rect(i * run_frame_width, 0, run_frame_width, run_frame_height))
-        for i in range(8)
-    ]
-
-    # Загрузка стартовой позиции
-    start_x, start_y = 0, 0
-    for obj in tmx_data.objects:
-        if obj.name == "start_place":
-            start_x, start_y = obj.x, obj.y
-            break
-
-    player_pos = [start_x, start_y]
-    player_frame = 0
-    player_speed = 5
+    player = Object(100, 400, "Data/gg_sprites/idle/image_0-0.png")
     flrunning = True
-    player_direction = "idle"
-    animation_timer = pygame.time.get_ticks()
-
-    clock = pygame.time.Clock()
 
     while flrunning:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 flrunning = False
 
-        # Обработка клавиш для движения
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_a]:
-            player_pos[0] -= player_speed
-            player_direction = "run"
-        elif keys[pygame.K_d]:
-            player_pos[0] += player_speed
-            player_direction = "run"
-        elif keys[pygame.K_w]:
-            player_pos[1] -= player_speed
-            player_direction = "run"
-        elif keys[pygame.K_s]:
-            player_pos[1] += player_speed
-            player_direction = "run"
+        key = pygame.key.get_pressed()
+        player.dx = 0
+        player.dy = 0
+
+        if key[pygame.K_d]:
+            player.dx = 5
+            player.start_animation()
+        elif key[pygame.K_a]:
+            player.dx = -5
+            player.start_animation()
+        elif key[pygame.K_w]:
+            player.dy = -5
+            player.start_animation()
+        elif key[pygame.K_s]:
+            player.dy = 5
+            player.start_animation()
         else:
-            player_direction = "idle"
+            player.stop_animation()
+            player.animate_idle()
 
-        # Отображаем фон и тайлы
-        screen.fill((0, 0, 0))  # Очистка экрана перед отрисовкой
-        for layer in tmx_data.visible_layers:
-            if isinstance(layer, pytmx.TiledTileLayer):
-                for x, y, gid in layer:
-                    tile = tmx_data.get_tile_image_by_gid(gid)
-                    if tile:
-                        screen.blit(tile, (x * tile_width, y * tile_height))
+        player.update()
+        screen.fill((0, 0, 0))
+        screen.blit(player.image, player.rect)
+        # # Отображаем фон и тайлы
+        # screen.fill((0, 0, 0))  # Очистка экрана перед отрисовкой
+        # for layer in tmx_data.visible_layers:
+        #     if isinstance(layer, pytmx.TiledTileLayer):
+        #         for x, y, gid in layer:
+        #             tile = tmx_data.get_tile_image_by_gid(gid)
+        #             if tile:
+        #                 screen.blit(tile, (x * tile_width, y * tile_height))
+        #
 
-        # Переключение кадров анимации
-        current_time = pygame.time.get_ticks()
-        if current_time - animation_timer > 100:  # Обновляем кадры каждые 100 мс
-            animation_timer = current_time
-            if player_direction == "run":
-                player_frame = (player_frame + 1) % len(run_frames)
-            else:
-                player_frame = 0
-
-        # Выбор текущего кадра
-        if player_direction == "run":
-            current_sprite = run_frames[player_frame]
-        else:
-            current_sprite = idle_frames[player_frame]
-
-        # Отрисовка игрока
-        screen.blit(current_sprite, player_pos)
-
-        pygame.display.flip()
-        clock.tick(60)  # Ограничение FPS
-
+        pygame.display.update()
+        clock.tick(FPS)
     pygame.quit()
 
 
