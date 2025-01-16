@@ -1,3 +1,5 @@
+
+
 import pygame
 import pytmx
 
@@ -109,6 +111,7 @@ class Camera:
         self.offset.x = max(0, min(self.offset.x, self.map_width - self.width))
         self.offset.y = max(0, min(self.offset.y, self.map_height - self.height))
 
+
 def render_map(tmx_data):
     tile_width = tmx_data.tilewidth
     tile_height = tmx_data.tileheight
@@ -142,8 +145,10 @@ def main():
         return
     map_width = tmx_data.width * tmx_data.tilewidth
     map_height = tmx_data.height * tmx_data.tileheight
+
+    spawn_x, spawn_y = 4650, 4625
     camera = Camera(WIDTH, HEIGHT, map_width, map_height)
-    player = Object(100, 400, "Data/gg_sprites/idle/image_0-0.png")
+    player = Object(spawn_x, spawn_y, "Data/gg_sprites/idle/image_0-0.png")
 
     flrunning = True
     while flrunning:
