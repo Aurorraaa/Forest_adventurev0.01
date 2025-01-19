@@ -1,5 +1,3 @@
-
-
 import pygame
 import pytmx
 
@@ -54,25 +52,25 @@ class Object(pygame.sprite.Sprite):
                 if self.Frame >= len(self.pers_right):
                     self.Frame = 0
 
-            if self.dx > 0:  # Движение вправо
+            if self.dx > 0:
                 self.animate_right()
                 self.last_direction = "right"
-            elif self.dx < 0:  # Движение влево
+            elif self.dx < 0:
                 self.animate_left()
                 self.last_direction = "left"
         else:
             self.animate_idle()
 
     def animate_right(self):
-        """Анимация движения вправо"""
+
         self.image = self.pers_right[int(self.Frame) % len(self.pers_right)]
 
     def animate_left(self):
-        """Анимация движения влево"""
+
         self.image = self.pers_left[int(self.Frame) % len(self.pers_left)]
 
     def animate_idle(self):
-        """Анимация ожидания"""
+
         self.Frame += 0.125
         if self.Frame >= len(self.idle_left_frames):
             self.Frame = 0
@@ -136,9 +134,8 @@ def main():
     screen = pygame.display.set_mode(SIZE)
     pygame.display.set_caption("Forest Adventure")
 
-    # Загрузка карты
     try:
-        tmx_data = pytmx.load_pygame("Data/map/map.tmx")
+        tmx_data = pytmx.load_pygame("Data/mapp/new_mapa.tmx")
         map_surface = render_map(tmx_data)
     except Exception as e:
         print(f"Ошибка загрузки карты: {e}")
