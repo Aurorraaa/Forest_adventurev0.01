@@ -2,6 +2,59 @@ import pygame
 import pytmx
 
 
+class Map:
+    def __init__(self, tmx_file):
+        self.tmx_map = pytmx.load_pygame(tmx_file)
+
+        self.lower_layers = ["ground", "grass", "paths", "props"]
+        self.upper_layers = ["ores", "symbs", "houses", "landscape"]
+
+        # Создаем словари для слоев
+        self.precomputed_layers = {
+            "lower": [],
+            "upper": []
+        }
+
+        # Подготовка данных о плитках
+        for layer in self.tmx_map.visible_layers:
+            if isinstance(layer, pytmx.TiledTileLayer):
+                layer_name = layer.name
+                target_list = (
+                    self.precomputed_layers["lower"]
+                    if layer_name in self.lower_layers
+                    else self.precomputed_layers["upper"]
+                )
+                for x, y, gid in layer:
+                    tile_image = self.tmx_map.get_tile_image_by_gid(gid)
+                    if tile_image:
+                        # Сохраняем данные о плитке
+                        target_list.append({
+                            "image": tile_image,
+                            "rect": pygame.Rect(
+                                x * self.tmx_map.tilewidth,
+                                y * self.tmx_map.tileheight,
+                                self.tmx_map.tilewidth,
+                                self.tmx_map.tileheight
+                            )
+                        })
+
+    def draw(self, screen, player, camera):
+        view_rect = pygame.Rect(camera.offset.x, camera.offset.y, screen.get_width(), screen.get_height())
+
+        # Рисуем нижние слои
+        for tile in self.precomputed_layers["lower"]:
+            if view_rect.colliderect(tile["rect"]):
+                screen.blit(tile["image"], camera.apply(tile["rect"]))
+
+        # Рисуем игрока
+        screen.blit(player.image, camera.apply(player.rect))
+
+        # Рисуем верхние слои
+        for tile in self.precomputed_layers["upper"]:
+            if view_rect.colliderect(tile["rect"]):
+                screen.blit(tile["image"], camera.apply(tile["rect"]))
+
+
 class Object(pygame.sprite.Sprite):
     def __init__(self, x, y, file):
         super().__init__()
@@ -110,22 +163,6 @@ class Camera:
         self.offset.y = max(0, min(self.offset.y, self.map_height - self.height))
 
 
-def render_map(tmx_data):
-    tile_width = tmx_data.tilewidth
-    tile_height = tmx_data.tileheight
-    map_width = tmx_data.width * tile_width
-    map_height = tmx_data.height * tile_height
-
-    map_surface = pygame.Surface((map_width, map_height))
-    for layer in tmx_data.visible_layers:
-        if isinstance(layer, pytmx.TiledTileLayer):
-            for x, y, gid in layer:
-                tile = tmx_data.get_tile_image_by_gid(gid)
-                if tile:
-                    map_surface.blit(tile, (x * tile_width, y * tile_height))
-    return map_surface
-
-
 def main():
     pygame.init()
     SIZE = WIDTH, HEIGHT = 800, 600
@@ -136,10 +173,10 @@ def main():
 
     try:
         tmx_data = pytmx.load_pygame("Data/mapp/new_mapa.tmx")
-        map_surface = render_map(tmx_data)
     except Exception as e:
         print(f"Ошибка загрузки карты: {e}")
         return
+
     map_width = tmx_data.width * tmx_data.tilewidth
     map_height = tmx_data.height * tmx_data.tileheight
 
@@ -147,6 +184,7 @@ def main():
     camera = Camera(WIDTH, HEIGHT, map_width, map_height)
     player = Object(spawn_x, spawn_y, "Data/gg_sprites/idle/image_0-0.png")
 
+    tile_map = Map("Data/mapp/new_mapa.tmx")
     flrunning = True
     while flrunning:
         for event in pygame.event.get():
@@ -175,10 +213,13 @@ def main():
 
         player.update()
         camera.update(player.rect)
+
         screen.fill((0, 0, 0))
-        screen.blit(map_surface, camera.apply_pos((0, 0)))
-        screen.blit(player.image, camera.apply(player.rect))
+
+        tile_map.draw(screen, player, camera)
+
         pygame.display.flip()
+
         clock.tick(FPS)
     pygame.quit()
 

@@ -6,9 +6,9 @@
     "activeFile": "new_mapa.tmx",
     "expandedProjectPaths": [
         ".",
-        "The Fan-tasy Tileset (Free)",
         "The Fan-tasy Tileset (Free)/Tiled",
-        "The Fan-tasy Tileset (Free)/Tiled/Tilemaps"
+        "The Fan-tasy Tileset (Free)/Tiled/Tilemaps",
+        "The Fan-tasy Tileset (Free)"
     ],
     "fileStates": {
         "The Fan-tasy Tileset (Free)/Tiled/Tilemaps/Beginning Fields.tmx": {
@@ -85,14 +85,15 @@
             "scaleInEditor": 1
         },
         "new_mapa.tmx": {
-            "scale": 2,
-            "selectedLayer": 5,
+            "scale": 1,
+            "selectedLayer": 8,
             "viewCenter": {
-                "x": 4982.25,
-                "y": 5183.5
+                "x": 5502,
+                "y": 1012
             }
         },
         "ores.tsx": {
+            "dynamicWrapping": false,
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
@@ -126,8 +127,10 @@
             "scaleInEditor": 1
         }
     },
+    "last.exportedFilePath": "D:/topprog/projects/forest_adventurev0.01/Data/mapp",
     "last.imagePath": "D:/topprog/projects/forest_adventurev0.01/Data/mapp",
     "map.height": 350,
+    "map.lastUsedExportFilter": "CSV файлы (*.csv)",
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 16,
     "map.tileWidth": 16,
