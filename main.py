@@ -8,22 +8,26 @@ class Map:
 
         self.lower_layers = ["ground", "grass", "paths", "props"]
         self.upper_layers = ["ores", "symbs", "houses", "landscape"]
+        self.collision_layer_name = "collision"
 
         # Создаем словари для слоев
         self.precomputed_layers = {
             "lower": [],
-            "upper": []
+            "upper": [],
+            "collision": []
         }
 
         # Подготовка данных о плитках
         for layer in self.tmx_map.visible_layers:
             if isinstance(layer, pytmx.TiledTileLayer):
                 layer_name = layer.name
-                target_list = (
-                    self.precomputed_layers["lower"]
-                    if layer_name in self.lower_layers
-                    else self.precomputed_layers["upper"]
-                )
+                if layer_name in self.lower_layers:
+                    target_list = self.precomputed_layers["lower"]
+                elif layer_name in self.upper_layers:
+                    target_list = self.precomputed_layers["upper"]
+                else:
+                    continue
+
                 for x, y, gid in layer:
                     tile_image = self.tmx_map.get_tile_image_by_gid(gid)
                     if tile_image:
@@ -37,6 +41,11 @@ class Map:
                                 self.tmx_map.tileheight
                             )
                         })
+            elif isinstance(layer, pytmx.TiledObjectGroup):
+                if layer.name == self.collision_layer_name:
+                    for obj in layer:
+                        self.precomputed_layers["collision"].append(pygame.Rect(obj.x, obj.y, obj.width, obj.height))
+
 
     def draw(self, screen, player, camera):
         view_rect = pygame.Rect(camera.offset.x, camera.offset.y, screen.get_width(), screen.get_height())
@@ -54,6 +63,11 @@ class Map:
             if view_rect.colliderect(tile["rect"]):
                 screen.blit(tile["image"], camera.apply(tile["rect"]))
 
+    def check_collision(self, rect):
+        for obj_rect in self.precomputed_layers["collision"]:
+            if rect.colliderect(obj_rect):
+                return True
+        return False
 
 class Object(pygame.sprite.Sprite):
     def __init__(self, x, y, file):
@@ -96,8 +110,15 @@ class Object(pygame.sprite.Sprite):
                                  "image_0-15.png", "image_0-16.png", "image_0-17.png"]
 
     def update(self, *args):
+        original_rect = self.rect.copy()
+
         self.rect.x += self.dx
+        if args[0].check_collision(self.rect):
+            self.rect.x = original_rect.x
+
         self.rect.y += self.dy
+        if args[0].check_collision(self.rect):
+            self.rect.y = original_rect.y
 
         if self.go:
             self.Frame += 0.4
@@ -115,15 +136,12 @@ class Object(pygame.sprite.Sprite):
             self.animate_idle()
 
     def animate_right(self):
-
         self.image = self.pers_right[int(self.Frame) % len(self.pers_right)]
 
     def animate_left(self):
-
         self.image = self.pers_left[int(self.Frame) % len(self.pers_left)]
 
     def animate_idle(self):
-
         self.Frame += 0.125
         if self.Frame >= len(self.idle_left_frames):
             self.Frame = 0
@@ -185,6 +203,7 @@ def main():
     player = Object(spawn_x, spawn_y, "Data/gg_sprites/idle/image_0-0.png")
 
     tile_map = Map("Data/mapp/new_mapa.tmx")
+
     flrunning = True
     while flrunning:
         for event in pygame.event.get():
@@ -211,15 +230,12 @@ def main():
             player.stop_animation()
             player.animate_idle()
 
-        player.update()
+        player.update(tile_map)
         camera.update(player.rect)
 
         screen.fill((0, 0, 0))
-
         tile_map.draw(screen, player, camera)
-
         pygame.display.flip()
-
         clock.tick(FPS)
     pygame.quit()
 
