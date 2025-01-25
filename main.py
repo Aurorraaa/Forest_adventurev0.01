@@ -6,8 +6,8 @@ class Map:
     def __init__(self, tmx_file):
         self.tmx_map = pytmx.load_pygame(tmx_file)
 
-        self.lower_layers = ["ground", "grass", "paths", "props"]
-        self.upper_layers = ["ores", "symbs", "houses", "landscape"]
+        self.lower_layers = ["ground", "grass", "paths"]
+        self.upper_layers = ["ores", "props", "symbs", "houses", "landscape"]
         self.collision_layer_name = "collision"
 
         # Создаем словари для слоев
@@ -46,7 +46,6 @@ class Map:
                     for obj in layer:
                         self.precomputed_layers["collision"].append(pygame.Rect(obj.x, obj.y, obj.width, obj.height))
 
-
     def draw(self, screen, player, camera):
         view_rect = pygame.Rect(camera.offset.x, camera.offset.y, screen.get_width(), screen.get_height())
 
@@ -69,12 +68,14 @@ class Map:
                 return True
         return False
 
+
 class Object(pygame.sprite.Sprite):
     def __init__(self, x, y, file):
         super().__init__()
 
         self.image = pygame.image.load(file).convert_alpha()
         self.rect = self.image.get_rect(center=(x, y))
+        # self.rect.inflate_ip(-20, -20)
 
         self.dx = 0
         self.dy = 0
