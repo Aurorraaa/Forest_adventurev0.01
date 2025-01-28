@@ -5,10 +5,10 @@
     },
     "activeFile": "new_mapa.tmx",
     "expandedProjectPaths": [
-        ".",
-        "The Fan-tasy Tileset (Free)/Tiled/Tilemaps",
         "The Fan-tasy Tileset (Free)",
-        "The Fan-tasy Tileset (Free)/Tiled"
+        ".",
+        "The Fan-tasy Tileset (Free)/Tiled",
+        "The Fan-tasy Tileset (Free)/Tiled/Tilemaps"
     ],
     "fileStates": {
         "The Fan-tasy Tileset (Free)/Tiled/Tilemaps/Beginning Fields.tmx": {
@@ -91,11 +91,11 @@
             "scaleInEditor": 1
         },
         "new_mapa.tmx": {
-            "scale": 2,
+            "scale": 0.125,
             "selectedLayer": 9,
             "viewCenter": {
-                "x": 2741,
-                "y": 2853.75
+                "x": 1528,
+                "y": 2496
             }
         },
         "ores.tsx": {

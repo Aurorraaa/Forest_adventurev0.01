@@ -1,5 +1,8 @@
+import sys
 import pygame
 import pytmx
+
+from menu import show_main_menu
 
 
 class Map:
@@ -17,7 +20,7 @@ class Map:
             "collision": []
         }
 
-        # Подготовка данных о плитках
+        # Подготовка данных о тайлах
         for layer in self.tmx_map.visible_layers:
             if isinstance(layer, pytmx.TiledTileLayer):
                 layer_name = layer.name
@@ -31,7 +34,7 @@ class Map:
                 for x, y, gid in layer:
                     tile_image = self.tmx_map.get_tile_image_by_gid(gid)
                     if tile_image:
-                        # Сохраняем данные о плитке
+                        # Сохраняем данные о тайле
                         target_list.append({
                             "image": tile_image,
                             "rect": pygame.Rect(
@@ -110,6 +113,16 @@ class Object(pygame.sprite.Sprite):
                                  "image_0-14.png",
                                  "image_0-15.png", "image_0-16.png", "image_0-17.png"]
 
+        self.idle_right_surfaces = [
+            pygame.image.load(f"Data/gg_sprites/idle/{file}").convert_alpha()
+            for file in self.idle_right_frames
+        ]
+
+        self.idle_left_surfaces = [
+            pygame.image.load(f"Data/gg_sprites/idle_left/{file}").convert_alpha()
+            for file in self.idle_left_frames
+        ]
+
     def update(self, *args):
         original_rect = self.rect.copy()
 
@@ -144,14 +157,13 @@ class Object(pygame.sprite.Sprite):
 
     def animate_idle(self):
         self.Frame += 0.125
-        if self.Frame >= len(self.idle_left_frames):
+        if self.Frame >= len(self.idle_left_surfaces):
             self.Frame = 0
+        self.frame_index = int(self.Frame)
         if self.last_direction == "right":
-            self.image = pygame.image.load(
-                "Data/gg_sprites/idle/" + self.idle_right_frames[int(self.Frame)]).convert_alpha()
+            self.image = self.idle_right_surfaces[self.frame_index]
         elif self.last_direction == "left":
-            self.image = pygame.image.load(
-                "Data/gg_sprites/idle_left/" + self.idle_left_frames[int(self.Frame)]).convert_alpha()
+            self.image = self.idle_left_surfaces[self.frame_index]
 
     def start_animation(self):
         self.go = True
@@ -182,7 +194,7 @@ class Camera:
         self.offset.y = max(0, min(self.offset.y, self.map_height - self.height))
 
 
-def main():
+def main_game():
     pygame.init()
     SIZE = WIDTH, HEIGHT = 800, 600
     FPS = 60
@@ -239,6 +251,20 @@ def main():
         pygame.display.flip()
         clock.tick(FPS)
     pygame.quit()
+    sys.exit()
+
+
+def main():
+    pygame.init()
+    SIZE = WIDTH, HEIGHT = 800, 600
+    screen = pygame.display.set_mode(SIZE)
+    clock = pygame.time.Clock()
+    choice = show_main_menu(screen, clock)
+    if choice == "play":
+        main_game()
+    elif choice == "quit":
+        pygame.quit()
+        sys.exit()
 
 
 if __name__ == "__main__":
