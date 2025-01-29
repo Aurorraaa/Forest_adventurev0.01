@@ -2,7 +2,7 @@ import sys
 import pygame
 import pytmx
 
-from menu import show_main_menu
+from menu import show_main_menu, show_settings_menu
 
 
 class Map:
@@ -194,12 +194,9 @@ class Camera:
         self.offset.y = max(0, min(self.offset.y, self.map_height - self.height))
 
 
-def main_game():
-    pygame.init()
-    SIZE = WIDTH, HEIGHT = 800, 600
+def main_game(screen, clock, volume):
+    WIDTH, HEIGHT = 800, 600
     FPS = 60
-    clock = pygame.time.Clock()
-    screen = pygame.display.set_mode(SIZE)
     pygame.display.set_caption("Forest Adventure")
 
     try:
@@ -245,8 +242,11 @@ def main_game():
 
         player.update(tile_map)
         camera.update(player.rect)
+        pygame.mixer.music.set_volume(volume)
 
+        # Можно использовать яркость как множитель для фона
         screen.fill((0, 0, 0))
+
         tile_map.draw(screen, player, camera)
         pygame.display.flip()
         clock.tick(FPS)
@@ -259,12 +259,21 @@ def main():
     SIZE = WIDTH, HEIGHT = 800, 600
     screen = pygame.display.set_mode(SIZE)
     clock = pygame.time.Clock()
-    choice = show_main_menu(screen, clock)
-    if choice == "play":
-        main_game()
-    elif choice == "quit":
-        pygame.quit()
-        sys.exit()
+
+    volume = 0.5
+    while True:
+        choice = show_main_menu(screen, clock)
+        if choice == "play":
+            main_game(screen, clock, volume)
+        elif choice == "settings":
+            new_volume, command = show_settings_menu(screen, clock, volume)
+            volume = new_volume
+            if command == "back":
+                continue
+
+        elif choice == "quit":
+            pygame.quit()
+            sys.exit()
 
 
 if __name__ == "__main__":
