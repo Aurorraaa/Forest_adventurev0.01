@@ -6,15 +6,18 @@ def show_main_menu(screen, clock):
     """Отображает главное меню и возвращает 'play' или 'quit'."""
     font = pygame.font.Font(None, 72)  # Шрифт для заголовка
     small_font = pygame.font.Font(None, 40)  # Шрифт для кнопок
-
-    # Фон (вы можете заменить на загрузку картинки или другой цвет)
+    background_image = pygame.image.load("Data/menu_back.png").convert()
+    background_image = pygame.transform.scale(background_image, screen.get_size())
+    play_button_image = pygame.image.load("Data/buttons/play01.png").convert_alpha()
+    quit_button_image = pygame.image.load("Data/buttons/back01.png").convert_alpha()
+    game_name = pygame.image.load("Data/yaname (1).png")
     menu_bg = pygame.Surface(screen.get_size())
     menu_bg.fill((50, 100, 50))
 
     # Прямоугольники кнопок (x, y, width, height)
-    play_button_rect = pygame.Rect(300, 200, 200, 60)
-    quit_button_rect = pygame.Rect(300, 300, 200, 60)
-
+    play_button_rect = play_button_image.get_rect(topleft=(370,450))
+    quit_button_rect = quit_button_image.get_rect(topleft = (550, 450))
+    name_rect = game_name.get_rect(topleft=(220, 0))
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -29,36 +32,12 @@ def show_main_menu(screen, clock):
                     return "quit"
 
         # Отрисовываем меню
-        screen.blit(menu_bg, (0, 0))
+        screen.blit(background_image, (0, 0))
 
         # Заголовок
-        title_surf = font.render("Forest Adventure", True, (255, 255, 255))
-        screen.blit(
-            title_surf,
-            (screen.get_width() // 2 - title_surf.get_width() // 2, 80)
-        )
-
-        # Кнопка "Play"
-        pygame.draw.rect(screen, (100, 200, 100), play_button_rect)
-        play_text = small_font.render("Play", True, (0, 0, 0))
-        screen.blit(
-            play_text,
-            (
-                play_button_rect.centerx - play_text.get_width() // 2,
-                play_button_rect.centery - play_text.get_height() // 2
-            )
-        )
-
-        # Кнопка "Quit"
-        pygame.draw.rect(screen, (200, 100, 100), quit_button_rect)
-        quit_text = small_font.render("Quit", True, (0, 0, 0))
-        screen.blit(
-            quit_text,
-            (
-                quit_button_rect.centerx - quit_text.get_width() // 2,
-                quit_button_rect.centery - quit_text.get_height() // 2
-            )
-        )
+        screen.blit(game_name, name_rect)
+        screen.blit(play_button_image, play_button_rect)
+        screen.blit(quit_button_image, quit_button_rect)
 
         pygame.display.flip()
         clock.tick(60)
