@@ -2,8 +2,9 @@ import pygame
 import sys
 
 
-def show_main_menu(screen, clock):
+def show_main_menu(screen, clock, volume):
     """Отображает главное меню и возвращает 'play' или 'quit'."""
+    pygame.mixer.music.set_volume(volume)
     background_image = pygame.image.load("Data/menu_back.png").convert()
     background_image = pygame.transform.scale(background_image, screen.get_size())
     play_button_images = {"normal": pygame.image.load("Data/buttons/play/play01.png").convert_alpha(),
@@ -85,7 +86,7 @@ def show_main_menu(screen, clock):
 
                     if settings_button_state == "pressed":
                         if settings_button_rect.collidepoint(event.pos):
-                            return "settings"
+                            return ("settings", volume)
                         else:
                             settings_button_state = "normal"
 
@@ -112,12 +113,6 @@ def show_main_menu(screen, clock):
 
 
 def show_settings_menu(screen, clock, volume):
-    """
-    Меню настроек. Возвращает (new_volume, new_brightness, command),
-    где command может быть:
-    - 'back' (вернуться в главное меню),
-    - 'quit' (выйти из приложения).
-    """
     pygame.font.init()
 
     background_image = pygame.Surface(screen.get_size())
@@ -125,17 +120,13 @@ def show_settings_menu(screen, clock, volume):
 
     font = pygame.font.Font(None, 40)
 
-    # Кнопка "Назад" (Back)
     back_button_surf = pygame.Surface((150, 50))
     back_button_surf.fill((180, 180, 180))
     back_button_rect = back_button_surf.get_rect(topleft=(50, 500))
 
     back_text = font.render("Back", True, (0, 0, 0))
-
-    # Параметры громкости
     current_volume = volume
 
-    # Создадим кнопки "+" и "-" для громкости
     plus_surf = pygame.Surface((40, 40))
     plus_surf.fill((100, 200, 100))
     minus_surf = pygame.Surface((40, 40))
@@ -149,23 +140,25 @@ def show_settings_menu(screen, clock, volume):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return current_volume, "back"
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # ЛКМ
+                if event.button == 1:
                     if back_button_rect.collidepoint(event.pos):
                         return current_volume, "back"
 
-                    # Громкость -
                     if volume_minus_rect.collidepoint(event.pos):
                         current_volume = max(0.0, current_volume - 0.1)
+                        pygame.mixer.music.set_volume(current_volume)
                     # Громкость +
                     if volume_plus_rect.collidepoint(event.pos):
                         current_volume = min(1.0, current_volume + 0.1)
+                        pygame.mixer.music.set_volume(current_volume)
 
-        # Отрисовка
         screen.blit(background_image, (0, 0))
 
-        # Кнопки Back / Quit
         screen.blit(back_button_surf, back_button_rect)
         screen.blit(back_text, (back_button_rect.centerx - back_text.get_width() // 2,
                                 back_button_rect.centery - back_text.get_height() // 2))

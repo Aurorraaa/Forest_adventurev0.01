@@ -1,9 +1,10 @@
 import sys
 import pygame
 import pytmx
+import random as rnd
 
 from menu import show_main_menu, show_settings_menu
-
+from invent import Inventory
 
 class Map:
     def __init__(self, tmx_file):
@@ -75,14 +76,14 @@ class Map:
 class Object(pygame.sprite.Sprite):
     def __init__(self, x, y, file):
         super().__init__()
-
         self.image = pygame.image.load(file).convert_alpha()
         self.rect = self.image.get_rect(center=(x, y))
-        # self.rect.inflate_ip(-20, -20)
+
+        self.inventory = Inventory()
+        self.inventory.add_item("Sword", "Data/weapons/image_0-1.png")
 
         self.dx = 0
         self.dy = 0
-
         self.go = False
         self.Frame = 0
         self.last_direction = "right"
@@ -198,6 +199,9 @@ def main_game(screen, clock, volume):
     WIDTH, HEIGHT = 800, 600
     FPS = 60
     pygame.display.set_caption("Forest Adventure")
+    music_paths = ["Data/arseny-st-ellies-popurri.mp3", "Data/masashi-hamauzu-the-yaschas-massif.mp3",
+                   "Data/Sergey_Eybog_-_Silhouette_In_Sunset_48126700.mp3",
+                   "Data/The_Seatbelts_-_Waltz_for_Zizi_OST_Cowboy_Bebop_68341288.mp3"]
 
     try:
         tmx_data = pytmx.load_pygame("Data/mapp/new_mapa.tmx")
@@ -213,12 +217,25 @@ def main_game(screen, clock, volume):
     player = Object(spawn_x, spawn_y, "Data/gg_sprites/idle/image_0-0.png")
 
     tile_map = Map("Data/mapp/new_mapa.tmx")
-
+    pygame.mixer.music.load(rnd.choice(music_paths))
+    pygame.mixer.music.play(0)
     flrunning = True
     while flrunning:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 flrunning = False
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    new_volume, command = show_settings_menu(screen, clock, volume)
+                    volume = new_volume
+                    pygame.mixer.music.set_volume(volume)
+
+                elif event.key == pygame.K_e:
+                    player.inventory.show_inventory(screen, clock)
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.load(rnd.choice(music_paths))
+            pygame.mixer.music.play(0)
 
         key = pygame.key.get_pressed()
         player.dx = 0
@@ -243,10 +260,7 @@ def main_game(screen, clock, volume):
         player.update(tile_map)
         camera.update(player.rect)
         pygame.mixer.music.set_volume(volume)
-
-        # Можно использовать яркость как множитель для фона
         screen.fill((0, 0, 0))
-
         tile_map.draw(screen, player, camera)
         pygame.display.flip()
         clock.tick(FPS)
@@ -260,15 +274,23 @@ def main():
     screen = pygame.display.set_mode(SIZE)
     clock = pygame.time.Clock()
 
+    pygame.mixer.music.load("Data/silent-owl-multidimensional-summer.mp3")
+    pygame.mixer.music.play(-1)  # -1 означает зацикленно
+
     volume = 0.5
+    pygame.mixer.music.set_volume(volume)
+
     while True:
-        choice = show_main_menu(screen, clock)
+        choice = show_main_menu(screen, clock, volume)
         if choice == "play":
+            pygame.mixer.music.stop()
             main_game(screen, clock, volume)
-        elif choice == "settings":
-            new_volume, command = show_settings_menu(screen, clock, volume)
-            volume = new_volume
+        elif isinstance(choice, tuple) and choice[0] == "settings":
+            _, current_volume = choice
+            new_volume, command = show_settings_menu(screen, clock, current_volume)
             if command == "back":
+                volume = new_volume
+                pygame.mixer.music.set_volume(volume)
                 continue
 
         elif choice == "quit":
