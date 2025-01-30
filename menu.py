@@ -170,10 +170,8 @@ def show_settings_menu(screen, clock, volume):
         screen.blit(back_text, (back_button_rect.centerx - back_text.get_width() // 2,
                                 back_button_rect.centery - back_text.get_height() // 2))
 
-        # Текст громкости
         vol_text = font.render(f"Volume: {current_volume:.1f}", True, (255, 255, 255))
         screen.blit(vol_text, (50, 150))
-        # Кнопки -/+
         screen.blit(minus_surf, volume_minus_rect)
         screen.blit(plus_surf, volume_plus_rect)
 
