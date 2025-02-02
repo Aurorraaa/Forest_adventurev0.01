@@ -199,3 +199,11 @@ class Inventory:
             if slot["item"] is not None:
                 all_items.append(slot["item"])
         return all_items
+
+    def process_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self.handle_mouse_down(event.pos)
+        elif event.type == pygame.MOUSEMOTION:
+            self.handle_mouse_motion(event.pos)
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            self.handle_mouse_up(event.pos)

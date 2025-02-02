@@ -7,6 +7,7 @@ from Blacksmith import Blacksmith
 from menu import show_main_menu, show_settings_menu
 from invent import Inventory
 from trade_menu import Trade_menu
+from chest import Chest
 
 
 class Map:
@@ -17,7 +18,10 @@ class Map:
         self.upper_layers = ["ores", "props", "symbs", "houses", "landscape"]
         self.collision_layer_name = "collision"
         self.merch_layer = "merchant"
+        self.chest_layer = "chest"
         self.merchant_rects = []
+        self.chests_rects = []
+        self.chests = []
         # Создаем словари для слоев
         self.precomputed_layers = {
             "lower": [],
@@ -54,10 +58,16 @@ class Map:
                     for obj in layer:
                         self.precomputed_layers["collision"].append(pygame.Rect(obj.x, obj.y, obj.width, obj.height))
 
-                elif layer.name == "merchant":
+                elif layer.name == self.merch_layer:
                     for obj in layer:
                         rect = pygame.Rect(obj.x, obj.y, obj.width, obj.height)
                         self.merchant_rects.append(rect)
+
+                elif layer.name == self.chest_layer:
+                    for obj in layer:
+                        rect = pygame.Rect(obj.x, obj.y, obj.width, obj.height)
+                        self.new_chest = Chest(rect)
+                        self.chests.append(self.new_chest)
 
     def draw(self, screen, player, camera):
         view_rect = pygame.Rect(camera.offset.x, camera.offset.y, screen.get_width(), screen.get_height())
@@ -88,6 +98,12 @@ class Map:
                 near_merchant = True
                 break
         return near_merchant
+
+    def check_chest(self, player_rect):
+        for chest in self.chests:
+            if player_rect.colliderect(chest.rect):
+                return chest
+        return None
 
 
 class Object(pygame.sprite.Sprite):
@@ -241,7 +257,9 @@ def main_game(screen, clock, volume):
     music_paths = ["Data/arseny-st-ellies-popurri.mp3", "Data/masashi-hamauzu-the-yaschas-massif.mp3",
                    "Data/Sergey_Eybog_-_Silhouette_In_Sunset_48126700.mp3",
                    "Data/The_Seatbelts_-_Waltz_for_Zizi_OST_Cowboy_Bebop_68341288.mp3"]
-
+    possible_items = ["stick", "large_healing_potion", "small_healing_potion", "deep_geode", "sapphire", "ruby",
+                      "diamond", "coal_ore", "copper_ore", "iron_ore"]
+    json_path = "objects (2).json"
     try:
         tmx_data = pytmx.load_pygame("Data/mapp/new_mapa.tmx")
     except Exception as e:
@@ -276,9 +294,14 @@ def main_game(screen, clock, volume):
                     player.inventory.show_inventory(screen, clock)
 
                 elif event.key == pygame.K_f:
+                    chest_obj = tile_map.check_chest(player.rect)
+                    if chest_obj:
+                        chest_obj.populate_random_items(possible_items, json_path)
+                        chest_obj.open_chest(player.inventory, screen, clock)
                     if near_merchant:
                         trade_menu = Trade_menu(player, blacksmith)
                         trade_menu.open(screen, clock)
+
         if not pygame.mixer.music.get_busy():
             pygame.mixer.music.load(rnd.choice(music_paths))
             pygame.mixer.music.play(0)
@@ -305,11 +328,12 @@ def main_game(screen, clock, volume):
 
         player.update(tile_map)
         camera.update(player.rect)
-        near_merchant = tile_map.check_merchant(player.rect)
         pygame.mixer.music.set_volume(volume)
         screen.fill((0, 0, 0))
         tile_map.draw(screen, player, camera)
-        if near_merchant:
+        near_chest = tile_map.check_chest(player.rect)
+        near_merchant = tile_map.check_merchant(player.rect)
+        if near_merchant or near_chest:
             font = pygame.font.Font(None, 30)
             text_surf = font.render("F для взаимодействия", True, (255, 255, 255))
             screen_width, screen_height = screen.get_size()

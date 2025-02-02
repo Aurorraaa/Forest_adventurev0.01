@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.1" orientation="orthogonal" renderorder="right-down" width="341" height="350" tilewidth="16" tileheight="16" infinite="0" nextlayerid="17" nextobjectid="385">
+<map version="1.10" tiledversion="1.11.1" orientation="orthogonal" renderorder="right-down" width="341" height="350" tilewidth="16" tileheight="16" infinite="0" nextlayerid="18" nextobjectid="399">
  <editorsettings>
   <export target="new_mapa..csv" format="csv"/>
  </editorsettings>
@@ -3189,5 +3189,18 @@
  </objectgroup>
  <objectgroup id="16" name="merchant">
   <object id="384" x="5349.38" y="5196.26" width="22.375" height="21.75"/>
+ </objectgroup>
+ <objectgroup id="17" name="chest">
+  <object id="385" x="1791" y="138.5" width="36" height="38.75"/>
+  <object id="387" x="1725" y="217" width="38" height="39.75"/>
+  <object id="388" x="1629.5" y="90.25" width="38.5" height="38.75"/>
+  <object id="389" x="1053.92" y="138.917" width="37.1667" height="37.5833"/>
+  <object id="390" x="1403.67" y="891.667" width="42.6667" height="37.6667"/>
+  <object id="391" x="1725" y="762.5" width="39.5" height="38.5"/>
+  <object id="392" x="1646" y="633.5" width="36.25" height="39.5"/>
+  <object id="393" x="781" y="1004.33" width="38.3333" height="37.6667"/>
+  <object id="395" x="844.25" y="633.75" width="38" height="38"/>
+  <object id="397" x="493.333" y="937.333" width="38.6667" height="40"/>
+  <object id="398" x="586.667" y="584" width="40.6667" height="40"/>
  </objectgroup>
 </map>

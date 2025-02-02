@@ -32,8 +32,8 @@
     "price": 1500
   },
   {
-    "id": "coal_ore",
-    "name": "Coal Ore",
+    "id": "coal",
+    "name": "Coal",
     "icon_path": "Data/icons/coal.png",
     "description": "Ore containing coal.",
     "max_stack": 99,
