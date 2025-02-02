@@ -3,8 +3,11 @@ import pygame
 import pytmx
 import random as rnd
 
+from Blacksmith import Blacksmith
 from menu import show_main_menu, show_settings_menu
 from invent import Inventory
+from trade_menu import Trade_menu
+
 
 class Map:
     def __init__(self, tmx_file):
@@ -13,7 +16,8 @@ class Map:
         self.lower_layers = ["ground", "grass", "paths"]
         self.upper_layers = ["ores", "props", "symbs", "houses", "landscape"]
         self.collision_layer_name = "collision"
-
+        self.merch_layer = "merchant"
+        self.merchant_rects = []
         # Создаем словари для слоев
         self.precomputed_layers = {
             "lower": [],
@@ -50,6 +54,11 @@ class Map:
                     for obj in layer:
                         self.precomputed_layers["collision"].append(pygame.Rect(obj.x, obj.y, obj.width, obj.height))
 
+                elif layer.name == "merchant":
+                    for obj in layer:
+                        rect = pygame.Rect(obj.x, obj.y, obj.width, obj.height)
+                        self.merchant_rects.append(rect)
+
     def draw(self, screen, player, camera):
         view_rect = pygame.Rect(camera.offset.x, camera.offset.y, screen.get_width(), screen.get_height())
 
@@ -72,15 +81,22 @@ class Map:
                 return True
         return False
 
+    def check_merchant(self, player_rect):
+        near_merchant = False
+        for m_rect in self.merchant_rects:
+            if player_rect.colliderect(m_rect):
+                near_merchant = True
+                break
+        return near_merchant
+
 
 class Object(pygame.sprite.Sprite):
     def __init__(self, x, y, file):
         super().__init__()
         self.image = pygame.image.load(file).convert_alpha()
         self.rect = self.image.get_rect(center=(x, y))
-
+        self.coins = 10000
         self.inventory = Inventory()
-        self.inventory.add_item("Sword", "Data/weapons/image_0-1.png")
 
         self.dx = 0
         self.dy = 0
@@ -172,6 +188,29 @@ class Object(pygame.sprite.Sprite):
     def stop_animation(self):
         self.go = False
 
+    def sell_item_to_merchant(self, item, merchant):
+        sell_price = item["price"] // 2
+        # проверяем, есть ли предмет у игрока
+        if item in self.inventory.get_all_items():
+            if merchant.coins >= sell_price:
+                merchant.coins -= sell_price
+                self.coins += sell_price
+                self.inventory.remove_existing_item(item)
+                merchant.inventory.add_existing_item(item)
+                print(f"Продано {item['name']} за {sell_price} монет.")
+
+    def buy_item_from_merchant(self, item, merchant):
+        price = item["price"]
+        if item in merchant.inventory.get_all_items():
+            if self.coins >= price:
+                self.coins -= price
+                merchant.coins += price
+                merchant.inventory.remove_existing_item(item)
+                self.inventory.add_existing_item(item)
+                print(f"Куплено {item['name']} за {price} монет.")
+            else:
+                print("Недостаточно денег у игрока!")
+
 
 class Camera:
     def __init__(self, width, height, map_width, map_height):
@@ -208,17 +247,19 @@ def main_game(screen, clock, volume):
     except Exception as e:
         print(f"Ошибка загрузки карты: {e}")
         return
-
     map_width = tmx_data.width * tmx_data.tilewidth
     map_height = tmx_data.height * tmx_data.tileheight
-
     spawn_x, spawn_y = 4650, 4625
     camera = Camera(WIDTH, HEIGHT, map_width, map_height)
     player = Object(spawn_x, spawn_y, "Data/gg_sprites/idle/image_0-0.png")
-
     tile_map = Map("Data/mapp/new_mapa.tmx")
+
     pygame.mixer.music.load(rnd.choice(music_paths))
     pygame.mixer.music.play(0)
+
+    blacksmith = Blacksmith("Владимир")
+    blacksmith.load_items_from_json("objects (2).json")
+    blacksmith.add_item_for_sale("eternity_sword")
     flrunning = True
     while flrunning:
         for event in pygame.event.get():
@@ -233,6 +274,11 @@ def main_game(screen, clock, volume):
 
                 elif event.key == pygame.K_e:
                     player.inventory.show_inventory(screen, clock)
+
+                elif event.key == pygame.K_f:
+                    if near_merchant:
+                        trade_menu = Trade_menu(player, blacksmith)
+                        trade_menu.open(screen, clock)
         if not pygame.mixer.music.get_busy():
             pygame.mixer.music.load(rnd.choice(music_paths))
             pygame.mixer.music.play(0)
@@ -259,9 +305,17 @@ def main_game(screen, clock, volume):
 
         player.update(tile_map)
         camera.update(player.rect)
+        near_merchant = tile_map.check_merchant(player.rect)
         pygame.mixer.music.set_volume(volume)
         screen.fill((0, 0, 0))
         tile_map.draw(screen, player, camera)
+        if near_merchant:
+            font = pygame.font.Font(None, 30)
+            text_surf = font.render("F для взаимодействия", True, (255, 255, 255))
+            screen_width, screen_height = screen.get_size()
+            x = screen_width - text_surf.get_width() - 10
+            y = screen_height - text_surf.get_height() - 10
+            screen.blit(text_surf, (x, y))
         pygame.display.flip()
         clock.tick(FPS)
     pygame.quit()

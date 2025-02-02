@@ -1,0 +1,121 @@
+[
+  {
+    "id": "wooden_sword",
+    "name": "Wooden Sword",
+    "icon_path": "Data/weapons/wooden/image_2-0.png",
+    "description": "A basic wooden sword.",
+    "max_stack": 1,
+    "price": 150
+  },
+  {
+    "id": "iron_sword",
+    "name": "Iron Sword",
+    "icon_path": "Data/weapons/iron/image_0-0.png",
+    "description": "A strong iron sword.",
+    "max_stack": 1,
+    "price": 500
+  },
+  {
+    "id": "demonic_sword",
+    "name": "Demonic Sword",
+    "icon_path": "Data/weapons/hellmade/image_3-0.png",
+    "description": "A sword forged from demonic energy.",
+    "max_stack": 1,
+    "price": 1000
+  },
+  {
+    "id": "eternity_sword",
+    "name": "Sword of eternity",
+    "icon_path": "Data/weapons/eternal/image_4-0.png",
+    "description": "A sword with eternal power.",
+    "max_stack": 1,
+    "price": 1500
+  },
+  {
+    "id": "coal_ore",
+    "name": "Coal Ore",
+    "icon_path": "Data/icons/coal.png",
+    "description": "Ore containing coal.",
+    "max_stack": 99,
+    "price": 10
+  },
+  {
+    "id": "copper_ore",
+    "name": "Copper Ore",
+    "icon_path": "Data/icons/copper_ore.png",
+    "description": "Ore containing copper.",
+    "max_stack": 99,
+    "price": 15
+  },
+  {
+    "id": "iron_ore",
+    "name": "Iron Ore",
+    "icon_path": "Data/icons/iron_ore.png",
+    "description": "Ore containing iron.",
+    "max_stack": 99,
+    "price": 25
+  },
+  {
+    "id": "diamond",
+    "name": "Diamond",
+    "icon_path": "Data/icons/diamond.png",
+    "description": "A precious diamond.",
+    "max_stack": 99,
+    "price": 300
+  },
+  {
+    "id": "ruby",
+    "name": "Ruby",
+    "icon_path": "Data/icons/ruby.png",
+    "description": "A precious ruby.",
+    "max_stack": 99,
+    "price": 400
+  },
+  {
+    "id": "sapphire",
+    "name": "Sapphire",
+    "icon_path": "Data/icons/sapphire.png",
+    "description": "A precious sapphire.",
+    "max_stack": 99,
+    "price": 500
+  },
+  {
+    "id": "deep_geode",
+    "name": "Deep Geode",
+    "icon_path": "Data/icons/geode.png",
+    "description": "A mysterious geode found deep underground.",
+    "max_stack": 99,
+    "price": 200
+  },
+  {
+    "id": "small_healing_potion",
+    "name": "Small Healing Potion",
+    "icon_path": "Data/icons/small_healing_potion.png",
+    "description": "Restores a small amount of health.",
+    "max_stack": 5,
+    "price": 100
+  },
+  {
+    "id": "large_healing_potion",
+    "name": "Large Healing Potion",
+    "icon_path": "Data/icons/large_healing_potion.png",
+    "description": "Restores a large amount of health.",
+    "max_stack": 5,
+    "price": 200
+  },{
+    "id": "wood",
+    "name": "Wood",
+    "icon_path": "Data/icons/wood.png",
+    "description": "Просто древесина.",
+    "max_stack": 100,
+    "price": 0
+  },
+  {
+    "id": "stick",
+    "name": "Stick",
+    "icon_path": "Data/icons/stick.png",
+    "description": "Маленькая, но крепкая палочка",
+    "max_stack": 100,
+    "price": 0
+  }
+]

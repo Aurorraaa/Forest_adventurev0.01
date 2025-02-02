@@ -5,10 +5,10 @@
     },
     "activeFile": "new_mapa.tmx",
     "expandedProjectPaths": [
-        "The Fan-tasy Tileset (Free)",
-        ".",
+        "The Fan-tasy Tileset (Free)/Tiled/Tilemaps",
         "The Fan-tasy Tileset (Free)/Tiled",
-        "The Fan-tasy Tileset (Free)/Tiled/Tilemaps"
+        ".",
+        "The Fan-tasy Tileset (Free)"
     ],
     "fileStates": {
         "The Fan-tasy Tileset (Free)/Tiled/Tilemaps/Beginning Fields.tmx": {
@@ -81,6 +81,10 @@
             "dynamicWrapping": false,
             "scaleInDock": 1
         },
+        "blakcmisth.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "kolodets.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
@@ -91,11 +95,11 @@
             "scaleInEditor": 1
         },
         "new_mapa.tmx": {
-            "scale": 0.125,
-            "selectedLayer": 9,
+            "scale": 8,
+            "selectedLayer": 10,
             "viewCenter": {
-                "x": 1528,
-                "y": 2496
+                "x": 5350.125,
+                "y": 5190.5
             }
         },
         "ores.tsx": {
@@ -134,7 +138,7 @@
         }
     },
     "last.exportedFilePath": "D:/topprog/projects/forest_adventurev0.01/Data/mapp",
-    "last.imagePath": "D:/topprog/projects/forest_adventurev0.01/Data/mapp/The Fan-tasy Tileset (Free)/Art/Buildings",
+    "last.imagePath": "D:/topprog/projects/forest_adventurev0.01/Data/mapp",
     "map.height": 350,
     "map.lastUsedExportFilter": "CSV файлы (*.csv)",
     "map.lastUsedFormat": "tmx",
@@ -151,10 +155,12 @@
         "ruin_land.tsx",
         "ruin_props.tsx",
         "ores.tsx",
-        "kolodets.tsx"
+        "kolodets.tsx",
+        "blakcmisth.tsx"
     ],
     "project": "map.tiled-project",
     "recentFiles": [
+        "blakcmisth.tsx",
         "kolodets.tsx",
         "ores.tsx",
         "ruin_props.tsx",
@@ -165,8 +171,7 @@
         "water.tsx",
         "land.tsx",
         "new_mapa.tmx",
-        "trop.tsx",
-        "road.tsx"
+        "trop.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {
