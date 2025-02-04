@@ -10,23 +10,37 @@ class Blacksmith():
 
     def load_items_from_json(self, json_path):
         try:
-            with open(json_path, "r") as file:
+            with open(json_path, "r", encoding="utf-8") as file:
                 items = json.load(file)
 
             self.items_catalog = {item["id"]: item for item in items}
+        except FileNotFoundError:
+            print(f"Файл {json_path} не найден!")
+            self.items_catalog = {}
+        except json.JSONDecodeError as e:
+            print(f"Ошибка чтения JSON-файла: {e}")
+            self.items_catalog = {}
         except Exception as e:
-            print(f"Ошибка загрузки предметов из JSON: {e}")
+            print(f"Неизвестная ошибка при загрузке JSON: {e}")
+            self.items_catalog = {}
 
     def add_item_for_sale(self, item_id):
         item = self.items_catalog.get(item_id)
         if item:
-            # Используем данные из каталога для добавления предмета в инвентарь
-            self.inventory.add_item(item["name"], item["icon_path"], item.get("price", 100))
+            self.inventory.add_item(
+                item["name"],
+                item["icon_path"],
+                item.get("price", 100),
+                description=item.get("description", ""),
+                damage=item.get("damage", 0),
+                max_stack = item.get("max_stack", 1),
+                quantity = item.get("current_stack", 1)
+            )
         else:
             print(f"Предмет с id '{item_id}' не найден в каталоге.")
 
     def buy_from_player(self, item, player):
-        buy_price = item.get("sell_price", 0)
+        buy_price = item.get("price", 0)
         if self.coins >= buy_price:
             self.coins -= buy_price
             player.coins += buy_price

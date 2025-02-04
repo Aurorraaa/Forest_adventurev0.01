@@ -1,35 +1,28 @@
 import pygame
 import json
 import random as rnd
-from invent import Inventory
+from invent import ChestInventory, Inventory
 
 
 class Chest:
     def __init__(self, rect):
-        self.rect = rect  # Область сундука на карте
-        self.inventory = Inventory()  # Каждый сундук имеет свой инвентарь
-        self.is_populated = False  # Флаг, чтобы заполнение происходило один раз
+        self.rect = rect
+        self.inventory = ChestInventory()
+        self.is_populated = False
 
     def populate_random_items(self, possible_item_ids, json_path):
-        """
-        Заполняет инвентарь сундука случайными предметами.
-        possible_item_ids — список идентификаторов (например, ["wood", "coal_ore", ...]),
-        json_path — путь к JSON-файлу с описанием предметов.
-        """
         if self.is_populated:
-            return  # Если сундук уже заполнен, повторное заполнение не нужно
+            return
 
         try:
-            with open(json_path, "r") as file:
+            with open(json_path, "r", encoding="utf-8") as file:
                 items = json.load(file)
-            # Создаём словарь для быстрого доступа: id -> данные предмета
             items_catalog = {item["id"]: item for item in items}
         except Exception as e:
             print(f"Ошибка загрузки предметов из JSON: {e}")
             return
 
-        # Выбираем случайное количество предметов: 3 или 4
-        num_items = rnd.randint(3, 4)
+        num_items = rnd.randint(2, 4)
         available_ids = possible_item_ids.copy()
         if len(available_ids) < num_items:
             num_items = len(available_ids)
@@ -38,29 +31,25 @@ class Chest:
         for item_id in selected_ids:
             if item_id in items_catalog:
                 item = items_catalog[item_id]
-                # Добавляем предмет в инвентарь сундука
-                # В метод add_item передаются: название, путь к иконке, цена
-                self.inventory.add_item(item["name"], item["icon_path"], item.get("price", 0))
+                self.inventory.add_item(
+                    item["name"],
+                    item["icon_path"],
+                    item.get("price", 0),
+                    item.get("description", ""),
+                    item.get("damage", 0),
+                    item.get("max_stack", 1),
+                    1
+                )
             else:
                 print(f"Предмет с id '{item_id}' не найден в JSON.")
         self.is_populated = True
 
     def open_chest(self, player_inventory, screen, clock):
-        """
-        Открывает окно взаимодействия с сундуком.
-        Отображаются две панели:
-          левая – инвентарь сундука,
-          правая – инвентарь игрока.
-        Для закрытия нажмите ESC или E.
-        """
-        # Задаём области для двух панелей
-        chest_panel_rect = pygame.Rect(50, 50, 300, 300)
-        player_panel_rect = pygame.Rect(400, 50, 300, 300)
-        self.inventory.bg_rect = chest_panel_rect
-        player_inventory.bg_rect = player_panel_rect
-
+        player_inventory.bg_rect.topleft = (50, 300)
+        self.inventory.bg_rect.topleft = (50, 50)
         running = True
         while running:
+            screen.fill((50, 50, 50))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -69,14 +58,99 @@ class Chest:
                     if event.key in (pygame.K_ESCAPE, pygame.K_e):
                         running = False
 
-                # Обработка событий drag & drop для обоих инвентарей
-                self.inventory.process_event(event)
-                player_inventory.process_event(event)
+                self.handle_drag_event(self.inventory, player_inventory, event)
+                self.handle_drag_event(player_inventory, self.inventory, event)
 
-            screen.fill((50, 50, 50))
-            pygame.draw.rect(screen, (200, 200, 200), chest_panel_rect, 2)
-            pygame.draw.rect(screen, (200, 200, 200), player_panel_rect, 2)
-            self.inventory.draw_slots(screen)
+            screen.blit(player_inventory.inventory_bg, player_inventory.bg_rect.topleft)
+            screen.blit(self.inventory.inventory_bg, self.inventory.bg_rect.topleft)
+
             player_inventory.draw_slots(screen)
+            self.inventory.draw_slots(screen)
+
+            mouse_pos = pygame.mouse.get_pos()
+            player_inventory.show_tooltip(screen, mouse_pos)
+            self.inventory.show_tooltip(screen, mouse_pos)
+
+            if Inventory.dragging_item is not None:
+                self.icon = Inventory.dragging_item["icon"]
+                self.x, self.y = Inventory.drag_pos[0] - Inventory.drag_offset[0], Inventory.drag_pos[1] - \
+                                 Inventory.drag_offset[1]
+                screen.blit(self.icon, (self.x, self.y))
             pygame.display.flip()
             clock.tick(60)
+
+    def handle_drag_event(self, source_inventory, target_inventory, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+
+            for i, slot in enumerate(source_inventory.slots):
+                rect_abs = pygame.Rect(
+                    source_inventory.bg_rect.x + slot["rect"].x,
+                    source_inventory.bg_rect.y + slot["rect"].y,
+                    slot["rect"].width,
+                    slot["rect"].height
+                )
+                if rect_abs.collidepoint(event.pos) and slot["item"] is not None:
+                    Inventory.dragging_item = slot["item"]
+                    Inventory.dragging_from = (source_inventory, i)
+                    slot["item"] = None
+                    icon_rect = Inventory.dragging_item["icon"].get_rect(center=rect_abs.center)
+                    Inventory.drag_offset = (event.pos[0] - icon_rect.x, event.pos[1] - icon_rect.y)
+                    Inventory.drag_pos = event.pos
+                    break
+
+        elif event.type == pygame.MOUSEMOTION:
+            if Inventory.dragging_item is not None:
+                Inventory.drag_pos = event.pos
+
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            if Inventory.dragging_item is not None:
+                dropped = False
+
+                for i, slot in enumerate(target_inventory.slots):
+                    rect_abs = pygame.Rect(
+                        target_inventory.bg_rect.x + slot["rect"].x,
+                        target_inventory.bg_rect.y + slot["rect"].y,
+                        slot["rect"].width,
+                        slot["rect"].height
+                    )
+                    if rect_abs.collidepoint(event.pos):
+                        if (slot["item"] is not None and slot["item"]["name"] == Inventory.dragging_item["name"]):
+                            free_space = slot["item"]["max_stack"] - slot["item"]["current_stack"]
+                            if free_space > 0:
+                                to_add = min(Inventory.dragging_item["current_stack"], free_space)
+                                slot["item"]["current_stack"] += to_add
+                                Inventory.dragging_item["current_stack"] -= to_add
+                                if Inventory.dragging_item["current_stack"] == 0:
+                                    Inventory.dragging_item = None
+                                dropped = True
+                                break
+                            else:
+                                # Если нет свободного места, можно сделать "swap"
+                                old_item = slot["item"]
+                                slot["item"] = Inventory.dragging_item
+                                src_inv, src_index = Inventory.dragging_from
+                                src_inv.slots[src_index]["item"] = old_item
+                                dropped = True
+                                break
+
+                        if slot["item"] is None and Inventory.dragging_item is not None:
+                            slot["item"] = Inventory.dragging_item
+                            dropped = True
+                            break
+
+                        if not dropped:
+                            old_item = slot["item"]
+                            slot["item"] = Inventory.dragging_item
+                            src_inv, src_index = Inventory.dragging_from
+                            src_inv.slots[src_index]["item"] = old_item
+                            dropped = True
+                            break
+
+                if not dropped:
+                    src_inv, src_index = Inventory.dragging_from
+                    src_inv.slots[src_index]["item"] = Inventory.dragging_item
+
+                Inventory.dragging_item = None
+                Inventory.dragging_from = None
+                Inventory.drag_offset = (0, 0)
+                Inventory.drag_pos = (0, 0)

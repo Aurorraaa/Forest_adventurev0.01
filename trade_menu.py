@@ -49,7 +49,7 @@ class Trade_menu():
             self.draw_header(screen)
             self.draw_inventory_list(screen, self.player.inventory,
                                      x=self.player_list_x, y=self.player_list_y,
-                                     title=f"Игрок (монет={self.player.coins})")
+                                     title=f"Игрок ({self.player.coins})")
             self.draw_inventory_list(screen, self.merchant.inventory,
                                      x=self.merchant_list_x, y=self.merchant_list_y,
                                      title=f"{self.merchant.name}")
@@ -70,7 +70,7 @@ class Trade_menu():
         items = inventory.get_all_items()
         y_offset = y
         for i, item in enumerate(items):
-            text = f"{item['name']} (цена={item['price']})"
+            text = f"{item['name']} ({item['price']})"
             surf = self.font.render(text, True, (200, 200, 200))
             screen.blit(surf, (x, y_offset))
             y_offset += self.item_height

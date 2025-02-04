@@ -258,7 +258,7 @@ def main_game(screen, clock, volume):
                    "Data/Sergey_Eybog_-_Silhouette_In_Sunset_48126700.mp3",
                    "Data/The_Seatbelts_-_Waltz_for_Zizi_OST_Cowboy_Bebop_68341288.mp3"]
     possible_items = ["stick", "large_healing_potion", "small_healing_potion", "deep_geode", "sapphire", "ruby",
-                      "diamond", "coal_ore", "copper_ore", "iron_ore"]
+                      "diamond", "coal", "copper_ore", "iron_ore", "wood"]
     json_path = "objects (2).json"
     try:
         tmx_data = pytmx.load_pygame("Data/mapp/new_mapa.tmx")

@@ -1,35 +1,39 @@
 [
   {
     "id": "wooden_sword",
-    "name": "Wooden Sword",
+    "name": "Деревянный меч",
     "icon_path": "Data/weapons/wooden/image_2-0.png",
     "description": "A basic wooden sword.",
     "max_stack": 1,
-    "price": 150
+    "price": 150,
+    "damage": 10
   },
   {
     "id": "iron_sword",
-    "name": "Iron Sword",
+    "name": "Железный меч",
     "icon_path": "Data/weapons/iron/image_0-0.png",
     "description": "A strong iron sword.",
     "max_stack": 1,
-    "price": 500
+    "price": 500,
+    "damage": 25
   },
   {
     "id": "demonic_sword",
-    "name": "Demonic Sword",
+    "name": "Меч из адской стали",
     "icon_path": "Data/weapons/hellmade/image_3-0.png",
     "description": "A sword forged from demonic energy.",
     "max_stack": 1,
-    "price": 1000
+    "price": 1000,
+    "damage": 50
   },
   {
     "id": "eternity_sword",
-    "name": "Sword of eternity",
+    "name": "Клеймор вечности",
     "icon_path": "Data/weapons/eternal/image_4-0.png",
     "description": "A sword with eternal power.",
     "max_stack": 1,
-    "price": 1500
+    "price": 1500,
+    "damage": 250
   },
   {
     "id": "coal",
