@@ -2,113 +2,140 @@
   {
     "id": "wooden_sword",
     "name": "Деревянный меч",
-    "icon_path": "Data/weapons/wooden/image_2-0.png",
-    "description": "A basic wooden sword.",
+    "icon_path": "Data/weapons/wooden/sword.png",
+    "description": "Заточенная палка с перевязанной рукоятью",
     "max_stack": 1,
     "price": 150,
-    "damage": 10
+    "damage": 10,
+    "ingredients": [
+      {
+        "id": "wood",
+        "quantity": 3
+      }
+    ]
   },
   {
     "id": "iron_sword",
     "name": "Железный меч",
     "icon_path": "Data/weapons/iron/image_0-0.png",
-    "description": "A strong iron sword.",
+    "description": "Довольной крепкий и острый меч",
     "max_stack": 1,
     "price": 500,
-    "damage": 25
+    "damage": 25,
+    "ingredients": [
+      {
+        "id": "stick",
+        "quantity": 1
+      },
+      {
+        "id": "iron_ingot",
+        "quantity": 2
+      }
+    ]
   },
   {
     "id": "demonic_sword",
     "name": "Меч из адской стали",
     "icon_path": "Data/weapons/hellmade/image_3-0.png",
-    "description": "A sword forged from demonic energy.",
+    "description": "Меч, в клинке которого заточена энергия тёмных душ",
     "max_stack": 1,
     "price": 1000,
-    "damage": 50
+    "damage": 50,
+    "ingredients": [
+      {
+        "id": "demonic_ingot",
+        "quantity": 2
+      },
+      {
+        "id": "stick",
+        "quantity": 1
+      }
+    ]
   },
   {
     "id": "eternity_sword",
     "name": "Клеймор вечности",
     "icon_path": "Data/weapons/eternal/image_4-0.png",
-    "description": "A sword with eternal power.",
+    "description": "Клеймор, что был создан давно забытым божеством",
     "max_stack": 1,
     "price": 1500,
     "damage": 250
   },
   {
     "id": "coal",
-    "name": "Coal",
+    "name": "Уголь",
     "icon_path": "Data/icons/coal.png",
-    "description": "Ore containing coal.",
+    "description": "Маленький кусочек угля",
     "max_stack": 99,
     "price": 10
   },
   {
     "id": "copper_ore",
-    "name": "Copper Ore",
+    "name": "Медная руда",
     "icon_path": "Data/icons/copper_ore.png",
-    "description": "Ore containing copper.",
+    "description": "Частая, но не менее полезная руда",
     "max_stack": 99,
     "price": 15
   },
   {
     "id": "iron_ore",
-    "name": "Iron Ore",
+    "name": "Железная руда",
     "icon_path": "Data/icons/iron_ore.png",
-    "description": "Ore containing iron.",
+    "description": "из 5 таких кусочков можно выплавить целый слиток",
     "max_stack": 99,
     "price": 25
   },
   {
     "id": "diamond",
-    "name": "Diamond",
+    "name": "Алмаз",
     "icon_path": "Data/icons/diamond.png",
-    "description": "A precious diamond.",
+    "description": "Блестяшка!!",
     "max_stack": 99,
-    "price": 300
+    "price": 1000
   },
   {
     "id": "ruby",
-    "name": "Ruby",
+    "name": "Рубин",
     "icon_path": "Data/icons/ruby.png",
-    "description": "A precious ruby.",
+    "description": "Один из редких и драгоценных камней",
     "max_stack": 99,
-    "price": 400
+    "price": 700
   },
   {
     "id": "sapphire",
-    "name": "Sapphire",
+    "name": "Сапфир",
     "icon_path": "Data/icons/sapphire.png",
-    "description": "A precious sapphire.",
+    "description": "Драгоценный камень, источающий синий блеск",
     "max_stack": 99,
     "price": 500
   },
   {
     "id": "deep_geode",
-    "name": "Deep Geode",
+    "name": "Глубинная жеода",
     "icon_path": "Data/icons/geode.png",
-    "description": "A mysterious geode found deep underground.",
+    "description": "Жеода, что находилась в недрах этого мира",
     "max_stack": 99,
     "price": 200
   },
   {
     "id": "small_healing_potion",
-    "name": "Small Healing Potion",
+    "name": "Маленькое лечебное зелье",
     "icon_path": "Data/icons/small_healing_potion.png",
-    "description": "Restores a small amount of health.",
+    "description": "Восстанавливает малое количество здоровья",
     "max_stack": 5,
     "price": 100
   },
   {
     "id": "large_healing_potion",
-    "name": "Large Healing Potion",
+    "name": "Большое лечебное зелье",
     "icon_path": "Data/icons/large_healing_potion.png",
-    "description": "Restores a large amount of health.",
+    "description": "Восстанавливает большое количество здоровья",
     "max_stack": 5,
     "price": 200
-  },{
+  },
+  {
     "id": "wood",
-    "name": "Wood",
+    "name": "Древесина",
     "icon_path": "Data/icons/wood.png",
     "description": "Просто древесина.",
     "max_stack": 100,
@@ -116,10 +143,58 @@
   },
   {
     "id": "stick",
-    "name": "Stick",
+    "name": "Палка",
     "icon_path": "Data/icons/stick.png",
     "description": "Маленькая, но крепкая палочка",
     "max_stack": 100,
-    "price": 0
+    "price": 0,
+    "ingredients": [
+      {
+        "id": "wood",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "id": "copper_ingot",
+    "name": "Медный слиток",
+    "icon_path": "Data/icons/copper_ingot.png",
+    "description": "Слиток, переливающийся бледно-оранжевым цветом",
+    "max_stack": 99,
+    "price": 50,
+    "ingredients": [
+      {
+        "id": "copper_ore",
+        "quantity": 5
+      }
+    ]
+  },
+  {
+    "id": "iron_ingot",
+    "name": "Железный слиток",
+    "icon_path": "Data/icons/iron_ingot.png",
+    "description": "Довольно прочный сплав, из которого можно сделать неплохое оружие",
+    "max_stack": 99,
+    "price": 100,
+    "ingredients": [
+      {
+        "id": "iron_ore",
+        "quantity": 5
+      }
+    ]
+  },
+  {
+    "id": "demonic_ingot",
+    "name": "Демонический слиток",
+    "icon_path": "Data/icons/demonic_ingot.png",
+    "description": "Слиток, что выкован из частиц тёмных душ",
+    "max_stack": 99,
+    "price": 200,
+    "ingredients": [
+      {
+        "id": "demonic_ore",
+        "quantity": 5
+      }
+    ]
   }
 ]

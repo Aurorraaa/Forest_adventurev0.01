@@ -28,6 +28,7 @@ class Blacksmith():
         item = self.items_catalog.get(item_id)
         if item:
             self.inventory.add_item(
+                item["id"],
                 item["name"],
                 item["icon_path"],
                 item.get("price", 100),

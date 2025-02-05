@@ -1,6 +1,8 @@
 import sys
 import pygame
 
+from crafting import CraftingBookMenu
+
 
 class Inventory:
     dragging_item = None
@@ -28,7 +30,7 @@ class Inventory:
             r = pygame.Rect(self.x, self.y, self.slot_width, self.slot_height)
             self.slots.append({"rect": r, "item": None})
 
-    def add_item(self, item_name, icon_path, price=0, description="", damage=0, max_stack=1, quantity=1):
+    def add_item(self, item_id, item_name, icon_path, price=0, description="", damage=0, max_stack=1, quantity=1):
         try:
             self.icon_surf = pygame.image.load(icon_path).convert_alpha()
         except pygame.error as e:
@@ -49,6 +51,7 @@ class Inventory:
         while quantity > 0:
             to_add = min(quantity, max_stack)
             new_item = {
+                "id" : item_id,
                 "name": item_name,
                 "icon": self.icon_surf,
                 "price": price,
@@ -66,9 +69,9 @@ class Inventory:
                 print("Нет свободных слотов!")
                 return
 
-    def remove_item(self, item_name, quantity=1):
+    def remove_item(self, item_id, quantity=1):
         for slot in self.slots:
-            if slot["item"] is not None and slot["item"]["name"] == item_name:
+            if slot["item"] is not None and slot["item"]["id"] == item_id:
                 if slot["item"]["current_stack"] > quantity:
                     slot["item"]["current_stack"] -= quantity
                     return
@@ -88,11 +91,17 @@ class Inventory:
         self.bg_rect.center = (screen.get_width() // 2, screen.get_height() // 2)
 
         runin = True
+        craft_button_rect = pygame.Rect(self.bg_rect.right + 20, self.bg_rect.top + 20, 100, 40)
+
         while runin:
             screen.blit(background_surf, (0, 0))
             screen.blit(overlay, (0, 0))
             screen.blit(self.inventory_bg, self.bg_rect)
-
+            pygame.draw.rect(screen, (100, 100, 200), craft_button_rect)
+            craft_text = font.render("Крафт", True, (255, 255, 255))
+            screen.blit(craft_text, (craft_button_rect.centerx - craft_text.get_width() // 2,
+                                     craft_button_rect.centery - craft_text.get_height() // 2))
+            self.draw_slots(screen)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -102,6 +111,11 @@ class Inventory:
                         runin = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
+                        if craft_button_rect.collidepoint(event.pos):
+                            runin = False
+                            craft_menu = CraftingBookMenu(inventory=self, json_path="objects (2).json",
+                                                          book_image_path="Data/book.png")
+                            craft_menu.open(screen, clock)
                         self.handle_mouse_down(event.pos)
                 elif event.type == pygame.MOUSEBUTTONUP:
                     if event.button == 1:  # ЛКМ
@@ -109,8 +123,6 @@ class Inventory:
                 elif event.type == pygame.MOUSEMOTION:
                     self.handle_mouse_motion(event.pos)
                 self.process_event(event, screen)
-
-            self.draw_slots(screen)
 
             mouse_pos = pygame.mouse.get_pos()
             self.show_tooltip(screen, mouse_pos)
@@ -271,6 +283,13 @@ class Inventory:
             Inventory.drag_pos = event.pos
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self.handle_mouse_up(event.pos)
+
+    def count_item(self, item_id):
+        count = 0
+        for slot in self.slots:
+            if slot["item"] is not None and slot["item"]["id"] == item_id:
+                count += slot["item"]["current_stack"]
+        return count
 
 
 class ChestInventory(Inventory):

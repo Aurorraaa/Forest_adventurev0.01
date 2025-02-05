@@ -32,6 +32,7 @@ class Chest:
             if item_id in items_catalog:
                 item = items_catalog[item_id]
                 self.inventory.add_item(
+                    item["id"],
                     item["name"],
                     item["icon_path"],
                     item.get("price", 0),
@@ -125,7 +126,7 @@ class Chest:
                                 dropped = True
                                 break
                             else:
-                                # Если нет свободного места, можно сделать "swap"
+
                                 old_item = slot["item"]
                                 slot["item"] = Inventory.dragging_item
                                 src_inv, src_index = Inventory.dragging_from

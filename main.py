@@ -345,11 +345,14 @@ def main_game(screen, clock, volume):
     pygame.quit()
     sys.exit()
 
+LOGICAL_WIDTH, LOGICAL_HEIGHT = 800, 600
+
 
 def main():
     pygame.init()
     SIZE = WIDTH, HEIGHT = 800, 600
-    screen = pygame.display.set_mode(SIZE)
+    flags = pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.FULLSCREEN | pygame.SCALED
+    screen = pygame.display.set_mode(SIZE, flags)
     clock = pygame.time.Clock()
 
     pygame.mixer.music.load("Data/silent-owl-multidimensional-summer.mp3")
