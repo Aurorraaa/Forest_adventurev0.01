@@ -40,7 +40,7 @@
     "description": "Меч, в клинке которого заточена энергия тёмных душ",
     "max_stack": 1,
     "price": 1000,
-    "damage": 50,
+    "damage": 75,
     "ingredients": [
       {
         "id": "demonic_ingot",
@@ -82,6 +82,14 @@
     "name": "Железная руда",
     "icon_path": "Data/icons/iron_ore.png",
     "description": "из 5 таких кусочков можно выплавить целый слиток",
+    "max_stack": 99,
+    "price": 25
+  },
+  {
+    "id": "demonic_ore",
+    "name": "Демоническая руда",
+    "icon_path": "Data/icons/demonic_ore.png",
+    "description": "души, не нашедшие упокоения, обрели материальное воплощение в этом кусочке",
     "max_stack": 99,
     "price": 25
   },

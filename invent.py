@@ -38,7 +38,7 @@ class Inventory:
             return
 
         for slot in self.slots:
-            if slot["item"] is not None and slot["item"]["name"] == item_name:
+            if slot["item"] is not None and slot["item"]["id"] == item_id:
                 current_stack = slot["item"]["current_stack"]
                 free_space = slot["item"]["max_stack"] - current_stack
                 if free_space > 0:
@@ -164,7 +164,7 @@ class Inventory:
 
             if rect_abs.collidepoint(mouse_pos) and slot["item"] is not None:
                 item = slot["item"]
-                tooltip_text = f"{item['name']}\nЦена: {item['price']} золота"
+                tooltip_text = f"{item['name']}\nЦена: {item['price']} золота за шт."
 
                 if "description" in item and item["description"]:
                     tooltip_text += f"\n{item['description']}"

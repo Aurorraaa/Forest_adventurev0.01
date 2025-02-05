@@ -8,6 +8,7 @@ from menu import show_main_menu, show_settings_menu
 from invent import Inventory
 from trade_menu import Trade_menu
 from chest import Chest
+from Ore import Ore
 
 
 class Map:
@@ -16,9 +17,11 @@ class Map:
 
         self.lower_layers = ["ground", "grass", "paths"]
         self.upper_layers = ["ores", "props", "symbs", "houses", "landscape"]
+        self.ore_layers = ["coal", "iron", "demonic", "diamonds"]
         self.collision_layer_name = "collision"
         self.merch_layer = "merchant"
         self.chest_layer = "chest"
+        self.ores = []
         self.merchant_rects = []
         self.chests_rects = []
         self.chests = []
@@ -69,6 +72,13 @@ class Map:
                         self.new_chest = Chest(rect)
                         self.chests.append(self.new_chest)
 
+                elif layer.name in self.ore_layers:
+                    for obj in layer:
+                        ore_type = layer.name  # Название слоя используется как тип руды
+                        hp = obj.properties.get("hp", 0)
+                        rect = pygame.Rect(obj.x, obj.y, obj.width, obj.height)
+                        self.ores.append(Ore(rect, ore_type, hp))
+
     def draw(self, screen, player, camera):
         view_rect = pygame.Rect(camera.offset.x, camera.offset.y, screen.get_width(), screen.get_height())
 
@@ -76,6 +86,10 @@ class Map:
         for tile in self.precomputed_layers["lower"]:
             if view_rect.colliderect(tile["rect"]):
                 screen.blit(tile["image"], camera.apply(tile["rect"]))
+
+        for ore in self.ores:
+            if ore.alive:
+                ore.draw(screen, camera)
 
         # Рисуем игрока
         screen.blit(player.image, camera.apply(player.rect))
@@ -105,6 +119,15 @@ class Map:
                 return chest
         return None
 
+    def check_ore_interaction(self, attack_rect, damage):
+        for ore in self.ores:
+            if ore.alive and attack_rect.colliderect(ore.rect):
+                dropped_items = ore.take_damage(damage)  # Наносим урон
+                if not ore.alive:  # Если руда разрушена
+                    self.ores.remove(ore)  # Удаляем руду
+                    return dropped_items
+        return None
+
 
 class Object(pygame.sprite.Sprite):
     def __init__(self, x, y, file):
@@ -119,6 +142,20 @@ class Object(pygame.sprite.Sprite):
         self.go = False
         self.Frame = 0
         self.last_direction = "right"
+        self.is_attacking = False
+        self.attack_frame = 0
+        self.attack_cooldown = 0
+        self.damage = 5
+        self.attack_animation = [pygame.image.load(f"Data/gg_sprites/atk_r/{f}").convert_alpha() for f in
+                                 ["tile000.png", "tile001.png", "tile002.png", "tile003.png", "tile004.png",
+                                  "tile005.png",
+                                  "tile006.png", "tile007.png", "tile008.png",
+                                  "tile009.png", "tile010.png", "tile011.png", "tile012.png", "tile013.png",
+                                  "tile014.png",
+                                  "tile015.png", "tile016.png", "tile017.png",
+                                  "tile018.png", "tile019.png", "tile020.png", "tile021.png", "tile022.png",
+                                  "tile023.png",
+                                  "tile024.png", "tile025.png"]]
 
         self.pers_right = [pygame.image.load(
             f"Data/gg_sprites/right/{f}").convert_alpha() for f in
@@ -156,31 +193,35 @@ class Object(pygame.sprite.Sprite):
             for file in self.idle_left_frames
         ]
 
-    def update(self, *args):
-        original_rect = self.rect.copy()
-
-        self.rect.x += self.dx
-        if args[0].check_collision(self.rect):
-            self.rect.x = original_rect.x
-
-        self.rect.y += self.dy
-        if args[0].check_collision(self.rect):
-            self.rect.y = original_rect.y
-
-        if self.go:
-            self.Frame += 0.4
-            if self.dx != 0:
-                if self.Frame >= len(self.pers_right):
-                    self.Frame = 0
-
-            if self.dx > 0:
-                self.animate_right()
-                self.last_direction = "right"
-            elif self.dx < 0:
-                self.animate_left()
-                self.last_direction = "left"
+    def update(self, tile_map):
+        if self.is_attacking:
+            self.animate_attack()
+            self.check_attack_collision(tile_map)
         else:
-            self.animate_idle()
+            original_rect = self.rect.copy()
+
+            self.rect.x += self.dx
+            if tile_map.check_collision(self.rect):
+                self.rect.x = original_rect.x
+
+            self.rect.y += self.dy
+            if tile_map.check_collision(self.rect):
+                self.rect.y = original_rect.y
+
+            if self.go:
+                self.Frame += 0.4
+                if self.dx != 0:
+                    if self.Frame >= len(self.pers_right):
+                        self.Frame = 0
+
+                if self.dx > 0:
+                    self.animate_right()
+                    self.last_direction = "right"
+                elif self.dx < 0:
+                    self.animate_left()
+                    self.last_direction = "left"
+            else:
+                self.animate_idle()
 
     def animate_right(self):
         self.image = self.pers_right[int(self.Frame) % len(self.pers_right)]
@@ -197,6 +238,48 @@ class Object(pygame.sprite.Sprite):
             self.image = self.idle_right_surfaces[self.frame_index]
         elif self.last_direction == "left":
             self.image = self.idle_left_surfaces[self.frame_index]
+
+    def start_attack(self):
+        if not self.is_attacking:
+            self.is_attacking = True
+            self.attack_frame = 0
+            self.attack_cooldown = 15
+
+    def animate_attack(self):
+        if self.attack_frame < len(self.attack_animation):
+            self.image = self.attack_animation[self.attack_frame]
+            self.attack_frame += 1
+        else:
+            self.attack_frame = 0
+            self.is_attacking = False
+
+    def get_attack_hitbox(self):
+        if self.last_direction == "right":
+            return pygame.Rect(self.rect.right, self.rect.y, 30, self.rect.height)
+        elif self.last_direction == "left":
+            return pygame.Rect(self.rect.left - 30, self.rect.y, 30, self.rect.height)
+        elif self.last_direction == "up":
+            return pygame.Rect(self.rect.x, self.rect.top - 30, self.rect.width, 30)
+        elif self.last_direction == "down":
+            return pygame.Rect(self.rect.x, self.rect.bottom, self.rect.width, 30)
+
+    def check_attack_collision(self, tile_map):
+        if self.is_attacking:
+            attack_rect = self.get_attack_hitbox()
+            dropped_items = tile_map.check_ore_interaction(attack_rect, self.damage)
+
+            if isinstance(dropped_items, dict):
+                dropped_items = [dropped_items]
+
+            if dropped_items:
+                for item in dropped_items:
+                    self.inventory.add_item(item_id=item["id"],
+                                            item_name=item["name"],
+                                            icon_path=item["icon_path"],
+                                            quantity=item["quantity"],
+                                            price=item["price"],
+                                            max_stack=item["max_stack"],
+                                            description=item["description"])
 
     def start_animation(self):
         self.go = True
@@ -301,7 +384,12 @@ def main_game(screen, clock, volume):
                     if near_merchant:
                         trade_menu = Trade_menu(player, blacksmith)
                         trade_menu.open(screen, clock)
-
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    player.start_attack()
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    player.is_attacking = False
         if not pygame.mixer.music.get_busy():
             pygame.mixer.music.load(rnd.choice(music_paths))
             pygame.mixer.music.play(0)
@@ -344,6 +432,7 @@ def main_game(screen, clock, volume):
         clock.tick(FPS)
     pygame.quit()
     sys.exit()
+
 
 LOGICAL_WIDTH, LOGICAL_HEIGHT = 800, 600
 
