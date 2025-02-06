@@ -3,13 +3,18 @@ import pygame
 import pytmx
 import random as rnd
 
+from pygame.examples.testsprite import screen_dims
+
 from Blacksmith import Blacksmith
 from menu import show_main_menu, show_settings_menu
 from invent import Inventory
 from trade_menu import Trade_menu
 from chest import Chest
 from Ore import Ore
+from Boss import Xonas
 
+
+# 1494 strochki
 
 class Map:
     def __init__(self, tmx_file):
@@ -25,6 +30,7 @@ class Map:
         self.merchant_rects = []
         self.chests_rects = []
         self.chests = []
+        self.altar = []
         # Создаем словари для слоев
         self.precomputed_layers = {
             "lower": [],
@@ -71,6 +77,12 @@ class Map:
                         rect = pygame.Rect(obj.x, obj.y, obj.width, obj.height)
                         self.new_chest = Chest(rect)
                         self.chests.append(self.new_chest)
+
+                elif layer.name == "spawn_altar":
+                    for obj in layer:
+                        rect = pygame.Rect(obj.x, obj.y, obj.width, obj.height)
+                        self.altar.append(rect)
+
 
                 elif layer.name in self.ore_layers:
                     for obj in layer:
@@ -122,11 +134,30 @@ class Map:
     def check_ore_interaction(self, attack_rect, damage):
         for ore in self.ores:
             if ore.alive and attack_rect.colliderect(ore.rect):
-                dropped_items = ore.take_damage(damage)  # Наносим урон
-                if not ore.alive:  # Если руда разрушена
-                    self.ores.remove(ore)  # Удаляем руду
+                dropped_items = ore.take_damage(damage)
+                if not ore.alive:
+                    self.ores.remove(ore)
+                    self.remove_tiles_in_rect("upper", ore.rect)
+                    self.remove_collision_in_rect(ore.rect)
                     return dropped_items
         return None
+
+    def remove_tiles_in_rect(self, layer_name, rect):
+        new_tiles = []
+        for tile in self.precomputed_layers[layer_name]:
+            # Если тайл пересекает прямоугольник - пропускаем (не добавляем)
+            if tile["rect"].colliderect(rect):
+                continue
+            new_tiles.append(tile)
+        self.precomputed_layers[layer_name] = new_tiles
+
+    def remove_collision_in_rect(self, rect):
+        new_collisions = []
+        for c_rect in self.precomputed_layers["collision"]:
+            if c_rect.colliderect(rect):
+                continue
+            new_collisions.append(c_rect)
+        self.precomputed_layers["collision"] = new_collisions
 
 
 class Object(pygame.sprite.Sprite):
@@ -134,8 +165,10 @@ class Object(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load(file).convert_alpha()
         self.rect = self.image.get_rect(center=(x, y))
-        self.coins = 10000
+        self.coins = 100
         self.inventory = Inventory()
+        self.max_hp = 100
+        self.hp = 100
 
         self.dx = 0
         self.dy = 0
@@ -145,7 +178,8 @@ class Object(pygame.sprite.Sprite):
         self.is_attacking = False
         self.attack_frame = 0
         self.attack_cooldown = 0
-        self.damage = 5
+        self.base_damage = 5
+        self.damage = self.base_damage
         self.attack_animation = [pygame.image.load(f"Data/gg_sprites/atk_r/{f}").convert_alpha() for f in
                                  ["tile000.png", "tile001.png", "tile002.png", "tile003.png", "tile004.png",
                                   "tile005.png",
@@ -194,6 +228,7 @@ class Object(pygame.sprite.Sprite):
         ]
 
     def update(self, tile_map):
+        self.update_damage()
         if self.is_attacking:
             self.animate_attack()
             self.check_attack_collision(tile_map)
@@ -210,9 +245,6 @@ class Object(pygame.sprite.Sprite):
 
             if self.go:
                 self.Frame += 0.4
-                if self.dx != 0:
-                    if self.Frame >= len(self.pers_right):
-                        self.Frame = 0
 
                 if self.dx > 0:
                     self.animate_right()
@@ -220,6 +252,24 @@ class Object(pygame.sprite.Sprite):
                 elif self.dx < 0:
                     self.animate_left()
                     self.last_direction = "left"
+
+                if self.dx != 0:
+                    # Если двигаемся горизонтально, сбрасываем кадры, если Frame превышает длину списка
+                    if self.Frame >= len(self.pers_right):
+                        self.Frame = 0
+                    if self.dx > 0:
+                        self.animate_right()
+                    elif self.dx < 0:
+                        self.animate_left()
+                else:
+                    # Если dx == 0 (нет горизонтального движения), но (вертикальное) движение есть,
+                    # используем анимацию, соответствующую self.last_direction.
+                    if self.Frame >= len(self.pers_right):
+                        self.Frame = 0
+                    if self.last_direction == "right":
+                        self.animate_right()
+                    else:
+                        self.animate_left()
             else:
                 self.animate_idle()
 
@@ -310,6 +360,43 @@ class Object(pygame.sprite.Sprite):
             else:
                 print("Недостаточно денег у игрока!")
 
+    def update_damage(self):
+        best_weapon_damage = 0
+        for slot in self.inventory.slots:
+            item = slot.get("item")
+            if item is not None:
+                # Если в предмете есть показатель урона
+                if "damage" in item and isinstance(item["damage"], (int, float)):
+                    if item["damage"] > best_weapon_damage:
+                        best_weapon_damage = item["damage"]
+        self.damage = self.base_damage + best_weapon_damage
+
+
+    def draw_player_hp(self, screen, player):
+        # Размеры полоски
+        bar_width = 200
+        bar_height = 20
+
+        screen_width, screen_height = screen.get_size()
+        # Позиция на экране (левый верхний угол)
+        x = screen_width - bar_width - 20
+        y = 20
+
+        hp_ratio = player.hp / player.max_hp if player.max_hp > 0 else 0
+
+        # Рисуем рамку (белую)
+        pygame.draw.rect(screen, (255, 255, 255), (x, y, bar_width, bar_height), 2)
+
+        # Заполняем красным на процент оставшегося HP
+        fill_width = int(bar_width * hp_ratio)
+        pygame.draw.rect(screen, (255, 0, 0), (x, y, fill_width, bar_height))
+
+        # (Дополнительно) Вывести текст вида "HP: 100/100"
+        font = pygame.font.Font(None, 24)
+        text_surf = font.render(f"HP: {player.hp}/{player.max_hp}", True, (255, 255, 255))
+
+        screen.blit(text_surf, (x + 5, y + bar_height + 5))  # Чуть выше полоски
+
 
 class Camera:
     def __init__(self, width, height, map_width, map_height):
@@ -333,6 +420,68 @@ class Camera:
         self.offset.y = max(0, min(self.offset.y, self.map_height - self.height))
 
 
+def show_victory_screen(screen, clock):
+    font = pygame.font.Font(None, 64)
+    text = "Спасибо за игру!"
+    text_surf = font.render(text, True, (255, 255, 255))
+    text_rect = text_surf.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+
+    # Заполняем экран чёрным цветом и отрисовываем сообщение
+    screen.fill((0, 0, 0))
+    screen.blit(text_surf, text_rect)
+    pygame.display.flip()
+
+    # Ждем 3000 мс (3 секунды) или пока пользователь не нажмёт клавишу
+    victory_start = pygame.time.get_ticks()
+    while pygame.time.get_ticks() - victory_start < 5000:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        clock.tick(60)
+
+    # После ожидания завершаем игру
+    pygame.quit()
+    sys.exit()
+
+
+def show_death_screen(screen, clock, respawn_delay=3000):
+    start_time = pygame.time.get_ticks()
+    font_big = pygame.font.Font(None, 64)
+    font_small = pygame.font.Font(None, 32)
+
+    while True:
+        elapsed = pygame.time.get_ticks() - start_time
+        remaining_time = max(0, respawn_delay - elapsed)
+        remaining_sec = remaining_time // 1000
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                pygame.quit()
+                sys.exit()
+
+        screen.fill((0, 0, 0))
+
+        death_text = "Вы умерли..."
+        death_surf = font_big.render(death_text, True, (255, 0, 0))
+        death_rect = death_surf.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2 - 50))
+        screen.blit(death_surf, death_rect)
+
+        countdown_text = f"Возрождение через {remaining_sec} сек"
+        countdown_surf = font_small.render(countdown_text, True, (255, 255, 255))
+        countdown_rect = countdown_surf.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2 + 20))
+        screen.blit(countdown_surf, countdown_rect)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+        if elapsed >= respawn_delay:
+            break
+
+
 def main_game(screen, clock, volume):
     WIDTH, HEIGHT = 800, 600
     FPS = 60
@@ -354,19 +503,26 @@ def main_game(screen, clock, volume):
     camera = Camera(WIDTH, HEIGHT, map_width, map_height)
     player = Object(spawn_x, spawn_y, "Data/gg_sprites/idle/image_0-0.png")
     tile_map = Map("Data/mapp/new_mapa.tmx")
-
+    xonas = None
+    vortex_grp = pygame.sprite.Group()
+    time_of_death = None
     pygame.mixer.music.load(rnd.choice(music_paths))
     pygame.mixer.music.play(0)
 
     blacksmith = Blacksmith("Владимир")
     blacksmith.load_items_from_json("objects (2).json")
     blacksmith.add_item_for_sale("eternity_sword")
+    battle_music_started = False
     flrunning = True
     while flrunning:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 flrunning = False
-
+            elif event.type == pygame.USEREVENT + 1:
+                battle_music = "Data/DEgITx_Matty_M_-_Aurora_76930622.mp3"
+                pygame.mixer.music.load(battle_music)
+                pygame.mixer.music.play(-1)
+                pygame.time.set_timer(pygame.USEREVENT + 1, 0)
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     new_volume, command = show_settings_menu(screen, clock, volume)
@@ -387,39 +543,103 @@ def main_game(screen, clock, volume):
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     player.start_attack()
+
+                    mx, my = event.pos
+                    world_x = mx + camera.offset.x
+                    world_y = my + camera.offset.y
+
+                    for altar_rect in tile_map.altar:  # наш список self.altar
+                        if altar_rect.collidepoint(world_x, world_y):
+                            if xonas is None:
+                                xonas = Xonas(1100, 363)  # Координаты, где появится босс
+                                print("Босс Xonas призван!")
+                                if not battle_music_started:
+                                    pygame.mixer.music.fadeout(1500)  # плавное затихание за 2000 мс (2 сек)
+                                    pygame.time.set_timer(pygame.USEREVENT + 1,1500)
+                                    battle_music_started = True
+                            break
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
                     player.is_attacking = False
+
+                # -- Проверяем, не умер ли игрок прямо сейчас
+        if player.hp <= 0 and time_of_death is None:
+            time_of_death = pygame.time.get_ticks()
+            print("Игрок погиб!")
+
+        if time_of_death is not None:
+            show_death_screen(screen, clock, respawn_delay=3000)
+            player.hp = player.max_hp
+            player.rect.center = (spawn_x, spawn_y)
+            time_of_death = None
+            xonas = None
+            vortex_grp.empty()
+        else:
+            key = pygame.key.get_pressed()
+
+            player.dx = 0
+            player.dy = 0
+
+            if key[pygame.K_d]:
+                player.dx = 5
+            if key[pygame.K_a]:
+                player.dx = -5
+
+            if key[pygame.K_w]:
+                player.dy = -5
+            if key[pygame.K_s]:
+                player.dy = 5
+
+            if player.dx != 0 or player.dy != 0:
+                player.start_animation()
+            else:
+                player.stop_animation()
+                player.animate_idle()
+
+            player.update(tile_map)
+
+            if xonas and xonas.is_alive:
+                xonas.update(player, vortex_grp)
+
+                # Проверка атаки игрока по боссу
+                if player.is_attacking:
+                    attack_rect = player.get_attack_hitbox()
+                    if attack_rect.colliderect(xonas.rect):
+                        xonas.take_damage(player.damage)
+
+
+                # Обновляем вихри
+            for vortex in vortex_grp:
+                vortex.update(player)
+                if vortex.done:
+                    vortex_grp.remove(vortex)
+            else:
+                pass
+
+            if xonas and not xonas.is_alive:
+                show_victory_screen(screen, clock)
+
         if not pygame.mixer.music.get_busy():
             pygame.mixer.music.load(rnd.choice(music_paths))
             pygame.mixer.music.play(0)
 
-        key = pygame.key.get_pressed()
-        player.dx = 0
-        player.dy = 0
-
-        if key[pygame.K_d]:
-            player.dx = 5
-            player.start_animation()
-        elif key[pygame.K_a]:
-            player.dx = -5
-            player.start_animation()
-        elif key[pygame.K_w]:
-            player.dy = -5
-            player.start_animation()
-        elif key[pygame.K_s]:
-            player.dy = 5
-            player.start_animation()
-        else:
-            player.stop_animation()
-            player.animate_idle()
-
-        player.update(tile_map)
         camera.update(player.rect)
         pygame.mixer.music.set_volume(volume)
+
         screen.fill((0, 0, 0))
         tile_map.draw(screen, player, camera)
+
+        if xonas and xonas.is_alive:
+            xonas.draw(screen, camera)
+            xonas.draw_hp_bar(screen, camera)
+
+        for vortex in vortex_grp:
+            screen.blit(vortex.image, camera.apply(vortex.rect))
+
+        player.draw_player_hp(screen, player)
+
         near_chest = tile_map.check_chest(player.rect)
+
         near_merchant = tile_map.check_merchant(player.rect)
         if near_merchant or near_chest:
             font = pygame.font.Font(None, 30)
@@ -428,8 +648,10 @@ def main_game(screen, clock, volume):
             x = screen_width - text_surf.get_width() - 10
             y = screen_height - text_surf.get_height() - 10
             screen.blit(text_surf, (x, y))
+
         pygame.display.flip()
         clock.tick(FPS)
+
     pygame.quit()
     sys.exit()
 
